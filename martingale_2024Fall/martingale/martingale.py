@@ -75,7 +75,7 @@ def run_episodes(n, winnings, win_prob):
     for i in range(n):
         episode_winnings = 0
         spins = 0
-        while spins < 1000 and episode_winnings < 80:
+        while spins < 1000 and episode_winnings <= 80:
             won = False
             bet_amount = 1
             while not won:
@@ -98,7 +98,7 @@ def experiment_two(n, winnings, win_prob):
     for i in range(n):
         episode_winnings = 0
         spins = 0
-        while episode_winnings > -256 and episode_winnings < 80:
+        while episode_winnings > -256 and episode_winnings <= 80:
             won = False
             bet_amount = 1
             while not won:
@@ -132,7 +132,6 @@ def test_code():
     # FIGURE ONE
     winnings = np.zeros((10, 1001))
     f1_data = run_episodes(10, winnings, win_prob)
-    # np.savetxt('data.txt', f1_data, delimiter=' ', fmt='%d')
     for i in range(f1_data.shape[0]):
         plt.plot(f1_data[i], label=f'Episode {i + 1}')
 
@@ -151,7 +150,6 @@ def test_code():
     mean = np.mean(data, axis=0)
     median = np.median(data, axis=0)
     std = np.std(data)
-    # np.savetxt('data2.txt', data, delimiter=' ', fmt='%d')
 
     # FIGURE TWO
     plt.plot(mean, label= 'mean')

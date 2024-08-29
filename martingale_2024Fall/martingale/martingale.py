@@ -70,9 +70,9 @@ def get_spin_result(win_prob):
         result = True
     return result
   		  	   		 	   		  		  		    	 		 		   		 		  
-def figure_one(winnings, win_prob):
+def run_episodes(n, winnings, win_prob):
     # 10 episodes, where each episode is 1000
-    for i in range(10):
+    for i in range(n):
         episode_winnings = 0
         spins = 0
         while spins < 1000 and episode_winnings < 80:
@@ -93,9 +93,48 @@ def figure_one(winnings, win_prob):
             winnings[i][spins+1:] = cur_winnings
     return winnings
 
-def plot_fig_one(data):
-    for i in range(data.shape[0]):
-        plt.plot(data[i], label=f'Episode {i + 1}')
+def experiment_two(n, winnings, win_prob):
+    # 10 episodes, where each episode is 1000
+    for i in range(n):
+        episode_winnings = 0
+        spins = 0
+        while episode_winnings > -256 and episode_winnings < 80:
+            won = False
+            bet_amount = 1
+            while not won:
+                # wager bet_amount on black
+                spins += 1
+                won = get_spin_result(win_prob)
+                if won:
+                    episode_winnings = episode_winnings + bet_amount
+                else:
+                    if episode_winnings - bet_amount < -256:
+                        episode_winnings = episode_winnings - abs(-256 - episode_winnings)
+                        break
+                    else:
+                        episode_winnings = episode_winnings - bet_amount
+                        bet_amount = bet_amount * 2
+                winnings[i][spins+1] = episode_winnings
+        if spins < 1000:
+            cur_winnings = winnings[i][spins]
+            winnings[i][spins+1:] = cur_winnings
+    return winnings
+
+def test_code():  		  	   		 	   		  		  		    	 		 		   		 		  
+    """  		  	   		 	   		  		  		    	 		 		   		 		  
+    Method to test your code  		  	   		 	   		  		  		    	 		 		   		 		  
+    """  		  	   		 	   		  		  		    	 		 		   		 		  
+    win_prob = 0.474  # set appropriately to the probability of a win
+    np.random.seed(gtid())  # do this only once
+    print(get_spin_result(win_prob))  # test the roulette spin  		  	   		 	   		  		  		    	 		 		   		 		  
+    # add your code here to implement the experiments
+
+    # FIGURE ONE
+    winnings = np.zeros((10, 1001))
+    f1_data = run_episodes(10, winnings, win_prob)
+    # np.savetxt('data.txt', f1_data, delimiter=' ', fmt='%d')
+    for i in range(f1_data.shape[0]):
+        plt.plot(f1_data[i], label=f'Episode {i + 1}')
 
     plt.title('Figure One Plot')
     plt.xlabel("Spins")
@@ -103,22 +142,80 @@ def plot_fig_one(data):
     plt.xlim(0, 300)
     plt.ylim(-256, 100)
     plt.legend()
-    plt.show()
+    plt.savefig('./images/figure_1.png')
+    plt.clf()
 
-def test_code():  		  	   		 	   		  		  		    	 		 		   		 		  
-    """  		  	   		 	   		  		  		    	 		 		   		 		  
-    Method to test your code  		  	   		 	   		  		  		    	 		 		   		 		  
-    """  		  	   		 	   		  		  		    	 		 		   		 		  
-    win_prob = 0.50  # set appropriately to the probability of a win
-    np.random.seed(gtid())  # do this only once
-    print(get_spin_result(win_prob))  # test the roulette spin  		  	   		 	   		  		  		    	 		 		   		 		  
-    # add your code here to implement the experiments
-    winnings = np.zeros((10, 1001))
-    data = figure_one(winnings, win_prob)
+    # FIGURE TWO AND THREE DATA
+    winnings = np.zeros((1001, 1001))
+    data = run_episodes(1000, winnings, win_prob)
+    mean = np.mean(data, axis=0)
+    median = np.median(data, axis=0)
+    std = np.std(data)
+    # np.savetxt('data2.txt', data, delimiter=' ', fmt='%d')
 
-    #figure one plot
-    plot_fig_one(data)
+    # FIGURE TWO
+    plt.plot(mean, label= 'mean')
+    plt.plot(mean + std, label='mean + std')
+    plt.plot(mean - std, label='mean - std')
+    plt.title('Figure Two Plot')
+    plt.xlabel("Spins")
+    plt.ylabel("Winnings")
+    plt.xlim(0, 300)
+    plt.ylim(-256, 100)
+    plt.legend()
+    plt.savefig('./images/figure_2.png')
+    # plt.show()
+    plt.clf()
 
+    # FIGURE THREE
+    plt.plot(median, label='median')
+    plt.plot(median + std, label='median + std')
+    plt.plot(median - std, label='median - std')
+    plt.title('Figure Three Plot')
+    plt.xlabel("Spins")
+    plt.ylabel("Winnings")
+    plt.xlim(0, 300)
+    plt.ylim(-256, 100)
+    plt.legend()
+    plt.savefig('./images/figure_3.png')
+    # plt.show()
+    plt.clf()
+
+    # FIGURE FOUR AND FIVE DATA
+    winnings = np.zeros((1001, 1001))
+    data2 = experiment_two(1000, winnings, win_prob)
+    mean2 = np.mean(data2, axis=0)
+    median2 = np.median(data2, axis=0)
+    std = np.std(data2)
+    # plot_fig_one(data2)
+
+    # FIGURE FOUR
+    plt.plot(mean2, label= 'mean')
+    plt.plot(mean2 + std, label='mean + std')
+    plt.plot(mean2 - std, label='mean - std')
+    plt.title('Figure Four Plot')
+    plt.xlabel("Spins")
+    plt.ylabel("Winnings")
+    plt.xlim(0, 300)
+    plt.ylim(-256, 100)
+    plt.legend()
+    plt.savefig('./images/figure_4.png')
+    # plt.show()
+    plt.clf()
+
+    # FIGURE FIVE
+    plt.plot(median2, label='median')
+    plt.plot(median2 + std, label='median + std')
+    plt.plot(median2 - std, label='median - std')
+    plt.title('Figure Five Plot')
+    plt.xlabel("Spins")
+    plt.ylabel("Winnings")
+    plt.xlim(0, 300)
+    plt.ylim(-256, 100)
+    plt.legend()
+    plt.savefig('./images/figure_5.png')
+    # plt.show()
+    plt.clf()
 
 if __name__ == "__main__":  		  	   		 	   		  		  		    	 		 		   		 		  
     test_code()  		  	   		 	   		  		  		    	 		 		   		 		  

@@ -8,8 +8,9 @@ All Rights Reserved
 import datetime as dt  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
 import numpy as np  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
-import pandas as pd  		  	   		 	   		  		  		    	 		 		   		 		  
+from scipy.optimize import minimize
+import pandas as pd
+import matplotlib.pyplot as plt
 from util import get_data, plot_data  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
@@ -50,37 +51,112 @@ def assess_portfolio(
         standard deviation of daily returns, Sharpe ratio and end value  		  	   		 	   		  		  		    	 		 		   		 		  
     :rtype: tuple  		  	   		 	   		  		  		    	 		 		   		 		  
     """  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
-    # Read in adjusted closing prices for given symbols, date range  		  	   		 	   		  		  		    	 		 		   		 		  
-    dates = pd.date_range(sd, ed)  		  	   		 	   		  		  		    	 		 		   		 		  
-    prices_all = get_data(syms, dates)  # automatically adds SPY  		  	   		 	   		  		  		    	 		 		   		 		  
-    prices = prices_all[syms]  # only portfolio symbols  		  	   		 	   		  		  		    	 		 		   		 		  
-    prices_SPY = prices_all["SPY"]  # only SPY, for comparison later  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
-    # Get daily portfolio value  		  	   		 	   		  		  		    	 		 		   		 		  
-    port_val = prices_SPY  # add code here to compute daily portfolio values  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
-    # Get portfolio statistics (note: std_daily_ret = volatility)  		  	   		 	   		  		  		    	 		 		   		 		  
-    cr, adr, sddr, sr = [  		  	   		 	   		  		  		    	 		 		   		 		  
-        0.25,  		  	   		 	   		  		  		    	 		 		   		 		  
-        0.001,  		  	   		 	   		  		  		    	 		 		   		 		  
-        0.0005,  		  	   		 	   		  		  		    	 		 		   		 		  
-        2.1,  		  	   		 	   		  		  		    	 		 		   		 		  
-    ]  # add code here to compute stats  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
+
+    # Read in adjusted closing prices for given symbols, date range
+    dates = pd.date_range(sd, ed)
+    prices_all = get_data(syms, dates)  # automatically adds SPY
+    prices = prices_all[syms]  # only portfolio symbols
+    prices_SPY = prices_all["SPY"]  # only SPY, for comparison later
+
+    # Generate allocs of 1/n, where n is number of symbols
+    allocs = np.full(len(syms), 1 / len(syms))
+
+    # add code here to find the allocations
+    cr, adr, sddr, sr = [
+        0.25,
+        0.001,
+        0.0005,
+        2.1,
+    ]
+
+    # Get initial daily return
+    norm_price = normalize(prices)
+    alloc_price = (norm_price * allocs) * sv
+    port_val = alloc_price.sum(axis=1)
+    daily_ret = compute_daily_returns(port_val)
+
+    # Computes initial values with initial data
+    cr = (port_val[-1] / port_val[0]) - 1
+    adr = daily_ret.mean()
+    sddr = daily_ret.std()
+    k = np.sqrt(252).astype(np.float64)
+    sr = (adr / sddr) * k
+    # print("initial: ", cr, adr, sddr, sr, allocs)
+
+    # Optimizer - minimize
+    constraints = {'type': 'eq', 'fun': lambda allocs: 1- allocs.sum()}
+    bounds = [(0, 1) for _ in range(allocs.shape[0])]
+    optimizer = minimize(negative_sharpe_ratio, allocs, args=(adr, sddr, norm_price, k, sv),
+                         method='SLSQP', bounds=bounds, constraints=constraints)
+    # print("Optimizer: ", optimizer)
+
+    # Get best daily portfolio value
+    allocs = optimizer.x
+    # print(norm_price)
+    best_alloc_val = (norm_price * allocs) * sv
+    best_port_val = best_alloc_val.sum(axis=1)
+    best_daily_ret = compute_daily_returns(best_port_val)
+    # print(best_daily_ret)
+
+    # Updating return values
+    cr = (best_port_val[-1] / best_port_val[0]) - 1
+    adr = best_daily_ret.mean()
+    sddr = best_daily_ret.std()
+    sr = k * (adr / sddr)
+    # print("final: ", cr, adr, sddr, sr, allocs)
+
+    norm_SPY = prices_SPY / prices_SPY.iloc[0]
+    norm_SPY[0] = 1.0
+
     # Compare daily portfolio value with SPY using a normalized plot  		  	   		 	   		  		  		    	 		 		   		 		  
-    if gen_plot:  		  	   		 	   		  		  		    	 		 		   		 		  
+    if not gen_plot:
         # add code to plot here  		  	   		 	   		  		  		    	 		 		   		 		  
-        df_temp = pd.concat(  		  	   		 	   		  		  		    	 		 		   		 		  
-            [port_val, prices_SPY], keys=["Portfolio", "SPY"], axis=1  		  	   		 	   		  		  		    	 		 		   		 		  
-        )  		  	   		 	   		  		  		    	 		 		   		 		  
+        df_temp = pd.concat(
+            [best_daily_ret, norm_SPY], keys=["Portfolio", "SPY"], axis=1
+        )
+
+        plt.plot(df_temp)
+        plt.title("Daily Portfolio Value")
+        plt.xlabel("Dates")
+        plt.ylabel("Price")
+        plt.legend(["Portfolio", "SPY"])
+        plt.show()
+        # plt.savefig('./images/plot.png')
+        plt.clf()
         pass  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # Add code here to properly compute end value  		  	   		 	   		  		  		    	 		 		   		 		  
     ev = sv  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
-    return cr, adr, sddr, sr, ev  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
+    return cr, adr, sddr, sr, ev
+
+def negative_sharpe_ratio(allocs, adr, sddr, norm_price, k, sv):
+    new_alloc_price = (norm_price * allocs)* sv
+    new_port_val = new_alloc_price.sum(axis=1)
+    new_daily_ret = compute_daily_returns(new_port_val)
+
+    # add code here to compute stats
+    new_adr = new_daily_ret.mean()
+    new_sddr = new_daily_ret.std()
+    sharpe_ratio = (new_adr/ new_sddr) * k
+    return -sharpe_ratio
+
+def normalize(df):
+    """Compute and return the normalized price values."""
+    normalize_prices = df.copy()
+    for i in range(1, normalize_prices.shape[0]):
+        for j in range(normalize_prices.shape[1]):
+            normalize_prices.iloc[i, j] = df.iloc[i, j] / df.iloc[0, j]
+    normalize_prices.iloc[0, :] = 1.0
+    return normalize_prices
+
+def compute_daily_returns(df):
+    """Compute and return the daily return values."""
+    daily_returns = df.copy()
+    daily_returns[1:] = (df[1:] / df[:-1].values) - 1
+    # daily_returns = (df / df.shift(1)) - 1 # much easier with Pandas!
+    daily_returns.iloc[0] = 0 # Pandas leaves the 0th row full of Nans
+    return daily_returns
   		  	   		 	   		  		  		    	 		 		   		 		  
 def test_code():  		  	   		 	   		  		  		    	 		 		   		 		  
     """  		  	   		 	   		  		  		    	 		 		   		 		  

@@ -130,7 +130,7 @@ def optimize_portfolio(
     norm_SPY[0] = 1.0
 
     # Compare daily portfolio value with SPY using a normalized plot  		  	   		 	   		  		  		    	 		 		   		 		  
-    if not gen_plot:
+    if gen_plot:
         # add code to plot here  		  	   		 	   		  		  		    	 		 		   		 		  
         df_temp = pd.concat(  		  	   		 	   		  		  		    	 		 		   		 		  
             [best_port_val, norm_SPY], keys=["Portfolio", "SPY"], axis=1
@@ -203,7 +203,27 @@ def test_code():
     print(f"Volatility (stdev of daily returns): {sddr}")  		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"Average Daily Return: {adr}")  		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"Cumulative Return: {cr}")  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
+def author():
+    """
+    To be implemented beginnging Summer 2024
+
+    Returns
+        The GT username of the student
+
+    Return type
+        str
+    """
+    return "jzheng429"
+def study_group():
+    """
+    Returns
+        A comma separated string of GT_Name of each member of your study group
+        # Example: "gburdell3, jdoe77, tbalch7" or "gburdell3" if a single individual working alone
+
+    Return type
+        str
+    """
+    return  "jzheng429"
   		  	   		 	   		  		  		    	 		 		   		 		  
 if __name__ == "__main__":  		  	   		 	   		  		  		    	 		 		   		 		  
     # This code WILL NOT be called by the auto grader  		  	   		 	   		  		  		    	 		 		   		 		  

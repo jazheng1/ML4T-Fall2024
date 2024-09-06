@@ -130,7 +130,7 @@ def optimize_portfolio(
     norm_SPY[0] = 1.0
 
     # Compare daily portfolio value with SPY using a normalized plot  		  	   		 	   		  		  		    	 		 		   		 		  
-    if gen_plot:
+    if not gen_plot:
         # add code to plot here  		  	   		 	   		  		  		    	 		 		   		 		  
         df_temp = pd.concat(  		  	   		 	   		  		  		    	 		 		   		 		  
             [best_port_val, norm_SPY], keys=["Portfolio", "SPY"], axis=1
@@ -141,7 +141,9 @@ def optimize_portfolio(
         plt.xlabel("Dates")
         plt.ylabel("Normalized Price")
         plt.legend(["Portfolio", "SPY"])
+        # plt.show()
         plt.savefig('./images/plot.png')
+
         plt.clf()
         pass  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  

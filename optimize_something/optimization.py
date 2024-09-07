@@ -1,4 +1,5 @@
 """"""
+import time
 
 """MC1-P2: Optimize a portfolio.  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
@@ -72,9 +73,9 @@ def optimize_portfolio(
     dates = pd.date_range(sd, ed)  		  	   		 	   		  		  		    	 		 		   		 		  
     prices_all = get_data(syms, dates)  # automatically adds SPY  		  	   		 	   		  		  		    	 		 		   		 		  
     prices = prices_all[syms]  # only portfolio symbols
-    # fill_missing_values(prices)
+    fill_missing_values(prices)
     prices_SPY = prices_all["SPY"]  # only SPY, for comparison later
-    # fill_missing_values(prices_SPY)
+    fill_missing_values(prices_SPY)
 
     # find the allocations for the optimal portfolio  		  	   		 	   		  		  		    	 		 		   		 		  
 
@@ -141,7 +142,7 @@ def optimize_portfolio(
         plt.ylabel("Normalized Price")
         plt.legend(["Portfolio", "SPY"])
         # plt.show()
-        plt.savefig('./images/figure1.png')
+        plt.savefig('./images/Figure_1.png')
         plt.clf()
         pass  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
@@ -161,9 +162,7 @@ def negative_sharpe_ratio(allocs, adr, sddr, norm_price, k):
 def normalize(df):
     """Compute and return the normalized price values."""
     normalize_prices = df.copy()
-    for i in range(1, normalize_prices.shape[0]):
-        for j in range(normalize_prices.shape[1]):
-            normalize_prices.iloc[i, j] = df.iloc[i, j] / df.iloc[0, j]
+    normalize_prices = df.div(df.iloc[0, :])
     normalize_prices.iloc[0, :] = 1.0
     return normalize_prices
 
@@ -195,14 +194,14 @@ def test_code():
     )  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # Print statistics  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Start Date: {start_date}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"End Date: {end_date}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Symbols: {symbols}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Allocations:{allocations}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Sharpe Ratio: {sr}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Volatility (stdev of daily returns): {sddr}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Average Daily Return: {adr}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Cumulative Return: {cr}")
+    # print(f"Start Date: {start_date}")
+    # print(f"End Date: {end_date}")
+    # print(f"Symbols: {symbols}")
+    # print(f"Allocations:{allocations}")
+    # print(f"Sharpe Ratio: {sr}")
+    # print(f"Volatility (stdev of daily returns): {sddr}")
+    # print(f"Average Daily Return: {adr}")
+    # print(f"Cumulative Return: {cr}")
 
 
 def author():
@@ -231,5 +230,19 @@ def study_group():
   		  	   		 	   		  		  		    	 		 		   		 		  
 if __name__ == "__main__":  		  	   		 	   		  		  		    	 		 		   		 		  
     # This code WILL NOT be called by the auto grader  		  	   		 	   		  		  		    	 		 		   		 		  
-    # Do not assume that it will be called  		  	   		 	   		  		  		    	 		 		   		 		  
-    test_code()  		  	   		 	   		  		  		    	 		 		   		 		  
+    # Do not assume that it will be called
+    # Record the start time
+    # start_time = time.time()
+    #
+    # # Call the function
+    # test_code()
+    #
+    # # Record the end time
+    # end_time = time.time()
+    #
+    # # Calculate the elapsed time
+    # elapsed_time = end_time - start_time
+    #
+    # print('time: ', elapsed_time)
+
+    test_code()

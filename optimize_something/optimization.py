@@ -1,5 +1,4 @@
 """"""
-from numexpr.expressions import bestConstantType
 
 """MC1-P2: Optimize a portfolio.  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
@@ -130,20 +129,19 @@ def optimize_portfolio(
     norm_SPY[0] = 1.0
 
     # Compare daily portfolio value with SPY using a normalized plot  		  	   		 	   		  		  		    	 		 		   		 		  
-    if not gen_plot:
+    if gen_plot:
         # add code to plot here  		  	   		 	   		  		  		    	 		 		   		 		  
         df_temp = pd.concat(  		  	   		 	   		  		  		    	 		 		   		 		  
             [best_port_val, norm_SPY], keys=["Portfolio", "SPY"], axis=1
         )
 
         plt.plot(df_temp)
-        plt.title("Daily Portfolio Value")
+        plt.title("Daily Portfolio Value And SPY")
         plt.xlabel("Dates")
         plt.ylabel("Normalized Price")
         plt.legend(["Portfolio", "SPY"])
         # plt.show()
-        plt.savefig('./images/plot.png')
-
+        plt.savefig('./images/figure1.png')
         plt.clf()
         pass  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
@@ -204,7 +202,9 @@ def test_code():
     print(f"Sharpe Ratio: {sr}")  		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"Volatility (stdev of daily returns): {sddr}")  		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"Average Daily Return: {adr}")  		  	   		 	   		  		  		    	 		 		   		 		  
-    print(f"Cumulative Return: {cr}")  		  	   		 	   		  		  		    	 		 		   		 		  
+    print(f"Cumulative Return: {cr}")
+
+
 def author():
     """
     To be implemented beginnging Summer 2024
@@ -216,6 +216,8 @@ def author():
         str
     """
     return "jzheng429"
+
+
 def study_group():
     """
     Returns

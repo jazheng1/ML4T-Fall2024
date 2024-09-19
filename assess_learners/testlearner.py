@@ -30,6 +30,7 @@ import numpy as np
   		  	   		 	   		  		  		    	 		 		   		 		  
 import LinRegLearner as lrl  		  	   		 	   		  		  		    	 		 		   		 		  
 import DTLearner as dt
+import RTLearner as rt
 
 
 if __name__ == "__main__":  		  	   		 	   		  		  		    	 		 		   		 		  
@@ -69,12 +70,13 @@ if __name__ == "__main__":
   		  	   		 	   		  		  		    	 		 		   		 		  
     # create a learner and train it  		  	   		 	   		  		  		    	 		 		   		 		  
     learner = lrl.LinRegLearner(verbose=True)  # create a LinRegLearner
-    learner2 = dt.DTLearner(leaf_size = 1, verbose= False)
-    learner2.add_evidence(train_x, train_y)  # train it
+    dlearner = dt.DTLearner(leaf_size = 1, verbose= False)
+    rlearner = rt.RTLearner(leaf_size = 1, verbose= False)
+    dlearner.add_evidence(train_x, train_y)  # train it
     print(learner.author())  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # evaluate in sample  		  	   		 	   		  		  		    	 		 		   		 		  
-    pred_y = learner.query(train_x)  # get the predictions  		  	   		 	   		  		  		    	 		 		   		 		  
+    pred_y = dlearner.query(train_x)  # get the predictions
     rmse = math.sqrt(((train_y - pred_y) ** 2).sum() / train_y.shape[0])  		  	   		 	   		  		  		    	 		 		   		 		  
     print()  		  	   		 	   		  		  		    	 		 		   		 		  
     print("In sample results")  		  	   		 	   		  		  		    	 		 		   		 		  
@@ -83,7 +85,7 @@ if __name__ == "__main__":
     print(f"corr: {c[0,1]}")  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # evaluate out of sample  		  	   		 	   		  		  		    	 		 		   		 		  
-    pred_y = learner.query(test_x)  # get the predictions  		  	   		 	   		  		  		    	 		 		   		 		  
+    pred_y = dlearner.query(test_x)  # get the predictions
     rmse = math.sqrt(((test_y - pred_y) ** 2).sum() / test_y.shape[0])  		  	   		 	   		  		  		    	 		 		   		 		  
     print()  		  	   		 	   		  		  		    	 		 		   		 		  
     print("Out of sample results")  		  	   		 	   		  		  		    	 		 		   		 		  

@@ -56,16 +56,20 @@ class LinRegLearner(object):
         :param data_y: The value we are attempting to predict given the X data  		  	   		 	   		  		  		    	 		 		   		 		  
         :type data_y: numpy.ndarray  		  	   		 	   		  		  		    	 		 		   		 		  
         """  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
-        # slap on 1s column so linear regression finds a constant term  		  	   		 	   		  		  		    	 		 		   		 		  
+
+        # slap on 1s column so linear regression finds a constant term
+        print('in ling')
+        # print(data_x)
         new_data_x = np.ones([data_x.shape[0], data_x.shape[1] + 1])  		  	   		 	   		  		  		    	 		 		   		 		  
         new_data_x[:, 0 : data_x.shape[1]] = data_x  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
         # build and save the model  		  	   		 	   		  		  		    	 		 		   		 		  
         self.model_coefs, residuals, rank, s = np.linalg.lstsq(  		  	   		 	   		  		  		    	 		 		   		 		  
             new_data_x, data_y, rcond=None  		  	   		 	   		  		  		    	 		 		   		 		  
-        )  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
+        )
+        print(self.model_coefs)
+
+
     def query(self, points):  		  	   		 	   		  		  		    	 		 		   		 		  
         """  		  	   		 	   		  		  		    	 		 		   		 		  
         Estimate a set of test points given the model we built.  		  	   		 	   		  		  		    	 		 		   		 		  

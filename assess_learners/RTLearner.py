@@ -48,13 +48,18 @@ class RTLearner:
             data_x (numpy.ndarray) – A set of feature values used to train the learner
             data_y (numpy.ndarray) – The value we are attempting to predict given the X data
         """
-        self.build_tree(data_x, data_y)
-        print("model:", self.tree)
+        self.tree = self.build_tree(data_x, data_y)
 
     def build_tree(self, data_x, data_y):
-        print(data_x)
+        self.tree = []
+        self._build_tree_helper(data_x, data_y)
+        return self.tree
+
+    def _build_tree_helper(self, data_x, data_y):
+        if data_x.shape[0] == 0:
+            return -1
+
         if data_x.shape[0] <= self.leaf_size or len(np.unique(data_y)) == 1:
-            # print(data_y)
             leaf_val = st.mode(data_y).mode[0]
             node_index = len(self.tree)
             self.tree.append([-1, leaf_val, -1, -1])
@@ -62,16 +67,37 @@ class RTLearner:
 
         random_feature = np.random.randint(0, data_x.shape[1])
         SplitVal = np.median(data_x[:, random_feature])
-        combined = np.column_stack((data_x, data_y))
-        left_half = combined[combined[:, random_feature] <= SplitVal]
-        right_half = combined[combined[:, random_feature] > SplitVal]
 
-        left_index = self.build_tree(left_half[:, :-1], left_half[:, -1])
-        right_index = self.build_tree(right_half[:, :-1], right_half[:, -1])
+        # Check for identical split values
+        if np.all(data_x[:, random_feature] == data_x[0, random_feature]):
+            leaf_val = st.mode(data_y).mode[0]
+            node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return node_index
+
+        left_indices = data_x[:, random_feature] <= SplitVal
+        right_indices = data_x[:, random_feature] > SplitVal
+        # print(max_correlation, best_feature, SplitVal)
+        # print("L,R: ", left_indices, right_indices)
+
+        if np.sum(right_indices) == 0:
+            leaf_val = st.mode(data_y[left_indices]).mode[0]
+            right_node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return right_node_index
+        else:
+            right_node_index = self._build_tree_helper(data_x[right_indices], data_y[right_indices])
+
+        if np.sum(left_indices) == 0:
+            leaf_val = st.mode(data_y[right_indices]).mode[0]
+            left_node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return left_node_index
+        else:
+            left_node_index = self._build_tree_helper(data_x[left_indices], data_y[left_indices])
 
         node_index = len(self.tree)
-        self.tree.append([random_feature, SplitVal, left_index, right_index])
-
+        self.tree.append([random_feature, SplitVal, left_node_index, right_node_index])
         return node_index
 
     def query(self, points):

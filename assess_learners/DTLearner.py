@@ -48,39 +48,67 @@ class DTLearner:
             data_x (numpy.ndarray) – A set of feature values used to train the learner
             data_y (numpy.ndarray) – The value we are attempting to predict given the X data
         """
-        self.tree = self.build_tree(data_x, data_y, 1, np.array([]))
+        self.tree = self.build_tree(data_x, data_y)
 
-        print('tree:', self.tree)
+    def build_tree(self, data_x, data_y):
+        self.tree = []
+        self._build_tree_helper(data_x, data_y)
+        return self.tree
 
-    def build_tree(self, data_x, data_y,l_index, tree):
-        # print(tree)
-        if data_x.shape[0] < self.leaf_size or len(np.unique(data_y)) == 1:
-            # print('hi')
-            leaf_val = st.mode(data_y).mode[0]  # Use the mode for leaf values
-            tree = np.append(tree, [-1, leaf_val, -1, -1], axis = 0)
-            return tree
+    def _build_tree_helper(self, data_x, data_y):
+        if data_x.shape[0] == 0:
+            return -1
+
+        if data_x.shape[0] <= self.leaf_size or len(np.unique(data_y)) == 1:
+            leaf_val = st.mode(data_y).mode[0]
+            node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return node_index
 
         correlations = []
         for i in range(data_x.shape[1]):
             col = data_x[:, i]
             corr_coef = np.corrcoef(col, data_y)[0, 1]
+            if np.isnan(corr_coef):
+                corr_coef = 0
             correlations.append(abs(corr_coef))
 
         max_correlation = max(correlations)
         best_feature = correlations.index(max_correlation)
         SplitVal = np.median(data_x[:, best_feature])
-        combined = np.column_stack((data_x, data_y))
-        left_half = combined[combined[:, best_feature] <= SplitVal]
-        right_half = combined[combined[:, best_feature] > SplitVal]
 
-        lefttree = self.build_tree(left_half[:, :-1], left_half[:, -1], l_index+1, np.array([]))
-        righttree = self.build_tree(right_half[:, :-1], right_half[:, -1], lefttree.shape[0] + 1, np.array([]))
 
-        root = [best_feature, SplitVal, l_index, lefttree.shape[0] + 1]
-        print(tree)
-        tree = np.append(tree, root, axis= 0)
-        print('After: ', tree)
-        return tree
+        # Check for identical split values
+        if np.all(data_x[:, best_feature] == data_x[0, best_feature]):
+            leaf_val = st.mode(data_y).mode[0]
+            node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return node_index
+
+        left_indices = data_x[:, best_feature] <= SplitVal
+        right_indices = data_x[:, best_feature] > SplitVal
+        # print(max_correlation, best_feature, SplitVal)
+        # print("L,R: ", left_indices, right_indices)
+
+        if np.sum(right_indices) == 0:
+            leaf_val = st.mode(data_y[left_indices]).mode[0]
+            right_node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return right_node_index
+        else:
+            right_node_index = self._build_tree_helper(data_x[right_indices], data_y[right_indices])
+
+        if np.sum(left_indices) == 0:
+            leaf_val = st.mode(data_y[right_indices]).mode[0]
+            left_node_index = len(self.tree)
+            self.tree.append([-1, leaf_val, -1, -1])
+            return left_node_index
+        else:
+            left_node_index = self._build_tree_helper(data_x[left_indices], data_y[left_indices])
+
+        node_index = len(self.tree)
+        self.tree.append([best_feature, SplitVal, left_node_index, right_node_index])
+        return node_index
 
     def query(self, points):
         """
@@ -100,9 +128,6 @@ class DTLearner:
             predicted_value = self.query_tree(self.tree[-1], data_point)
             predictions.append(predicted_value)
 
-        # Convert predictions to a NumPy array if needed
-        predictions = np.array(predictions)
-        # print("Predictions: ", predictions)
         return predictions
 
     def query_tree(self, root, data_point):
@@ -110,12 +135,9 @@ class DTLearner:
         if root[0] == -1:
             return root[1]
 
-        # Get the feature index and split value
         feature_index = root[0]
         split_value = root[1]
-
-        # Traverse left or right subtree based on the data point
         if data_point[feature_index] <= split_value:
-            return self.query_tree(self.tree[root[2]], data_point)  # Go to left subtree
+            return self.query_tree(self.tree[root[2]], data_point)
         else:
-            return self.query_tree(self.tree[root[3]], data_point)  # Go to right subtree
+            return self.query_tree(self.tree[root[3]], data_point)

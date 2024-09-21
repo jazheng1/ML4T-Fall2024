@@ -31,7 +31,8 @@ import numpy as np
 import LinRegLearner as lrl  		  	   		 	   		  		  		    	 		 		   		 		  
 import DTLearner as dt
 import RTLearner as rt
-
+import BagLearner as bl
+import InsaneLearner as it
 
 if __name__ == "__main__":  		  	   		 	   		  		  		    	 		 		   		 		  
     if len(sys.argv) != 2:  		  	   		 	   		  		  		    	 		 		   		 		  
@@ -67,16 +68,18 @@ if __name__ == "__main__":
   		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"{test_x.shape}")  		  	   		 	   		  		  		    	 		 		   		 		  
     print(f"{test_y.shape}")  		  	   		 	   		  		  		    	 		 		   		 		  
-  		  	   		 	   		  		  		    	 		 		   		 		  
+    print(train_y.shape)
     # create a learner and train it  		  	   		 	   		  		  		    	 		 		   		 		  
     learner = lrl.LinRegLearner(verbose=True)  # create a LinRegLearner
     dlearner = dt.DTLearner(leaf_size = 1, verbose= False)
     rlearner = rt.RTLearner(leaf_size = 1, verbose= False)
-    dlearner.add_evidence(train_x, train_y)  # train it
+    blearner = bl.BagLearner(learner=dt.DTLearner, kwargs={'leaf_size':1}, bags=10, boost=False, verbose=False)
+    dlearner.add_evidence(train_x, train_y)
+    blearner.add_evidence(train_x, train_y)  # train it
     print(learner.author())  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # evaluate in sample  		  	   		 	   		  		  		    	 		 		   		 		  
-    pred_y = dlearner.query(train_x)  # get the predictions
+    pred_y = blearner.query(train_x)  # get the predictions
     rmse = math.sqrt(((train_y - pred_y) ** 2).sum() / train_y.shape[0])  		  	   		 	   		  		  		    	 		 		   		 		  
     print()  		  	   		 	   		  		  		    	 		 		   		 		  
     print("In sample results")  		  	   		 	   		  		  		    	 		 		   		 		  
@@ -85,7 +88,7 @@ if __name__ == "__main__":
     print(f"corr: {c[0,1]}")  		  	   		 	   		  		  		    	 		 		   		 		  
   		  	   		 	   		  		  		    	 		 		   		 		  
     # evaluate out of sample  		  	   		 	   		  		  		    	 		 		   		 		  
-    pred_y = dlearner.query(test_x)  # get the predictions
+    pred_y = blearner.query(test_x)  # get the predictions
     rmse = math.sqrt(((test_y - pred_y) ** 2).sum() / test_y.shape[0])  		  	   		 	   		  		  		    	 		 		   		 		  
     print()  		  	   		 	   		  		  		    	 		 		   		 		  
     print("Out of sample results")  		  	   		 	   		  		  		    	 		 		   		 		  

@@ -63,35 +63,23 @@ if __name__ == "__main__":
     train_rows = int(0.6 * data.shape[0])
     shuffled_indices = np.random.permutation(data.shape[0])
 
-    # Select training indices
     train_indices = shuffled_indices[:train_rows]
-    # Select testing indices
     test_indices = shuffled_indices[train_rows:]
 
-    # Separate out training and testing data
-    train_x = data[train_indices, :-1]  # Features for training
-    train_y = data[train_indices, -1]  # Target for training
-    test_x = data[test_indices, :-1]  # Features for testing
-    test_y = data[test_indices, -1]  # Target for testing
+    train_x = data[train_indices, :-1]
+    train_y = data[train_indices, -1]
+    test_x = data[test_indices, :-1]
+    test_y = data[test_indices, -1]
 
-    # test_rows = data.shape[0] - train_rows
-    #
-    # # separate out training and testing data
-    # train_x = data[:train_rows, 0:-1]
-    # train_y = data[:train_rows, -1]
-    # test_x = data[train_rows:, 0:-1]
-    # test_y = data[train_rows:, -1]
-  	#
-    print(f"{test_x.shape}")
-    print(f"{test_y.shape}")
+    # print(f"{test_x.shape}")
+    # print(f"{test_y.shape}")
 
     # create a learner and train it  		  	   		 	   		  		  		    	 		 		   		 		  
-    learner = lrl.LinRegLearner(verbose=True)  # create a LinRegLearner
-    dlearner = dt.DTLearner(leaf_size = 1, verbose= False)
-    rlearner = rt.RTLearner(leaf_size = 1, verbose= False)
-    blearner = bl.BagLearner(learner=dt.DTLearner, kwargs={'leaf_size':1}, bags=10, boost=False, verbose=False)
-    dlearner.add_evidence(train_x, train_y)
-    # blearner.add_evidence(train_x, train_y)
+    # learner = lrl.LinRegLearner(verbose=True)  # create a LinRegLearner
+    # dlearner = dt.DTLearner(leaf_size = 1, verbose= False)
+    # rlearner = rt.RTLearner(leaf_size = 1, verbose= False)
+    # blearner = bl.BagLearner(learner=dt.DTLearner, kwargs={'leaf_size':1}, bags=10, boost=False, verbose=False)
+    # dlearner.add_evidence(train_x, train_y)
     # print(learner.author())
 
   	#EXPERIMENT 1
@@ -109,8 +97,8 @@ if __name__ == "__main__":
         outsamrmse.append(out_rmse)
 
 
-    plt.plot(leafs, insamrmse, marker='o', label='In-Sample RMSE')
-    plt.plot(leafs, outsamrmse, marker='s', label='Out-Of-Sample RMSE')
+    plt.plot(leafs, insamrmse, label='In-Sample RMSE')
+    plt.plot(leafs, outsamrmse, label='Out-Of-Sample RMSE')
 
     plt.title('Determinist Decision Tree Learner RMSE vs Leaf Size')
     plt.xlabel('Leaf Size')
@@ -119,7 +107,7 @@ if __name__ == "__main__":
     plt.xticks(np.arange(50, -1, -10))
     plt.grid()
     plt.legend()
-    # plt.savefig('./experiment-1.png')
+    plt.savefig('./experiment-1.png')
     # plt.show()
     plt.clf()
 
@@ -136,10 +124,10 @@ if __name__ == "__main__":
         out_rmse = math.sqrt(((test_y - pred_y) ** 2).sum() / test_y.shape[0])
         bagout.append(out_rmse)
 
-    plt.plot(leafs, insamrmse, marker='o', label='DT In-Sample RMSE')
-    plt.plot(leafs, outsamrmse, marker='s', label='DT Out-Of-Sample RMSE')
-    plt.plot(leafs, bagin, marker='^', label='Bag In-Sample RMSE')
-    plt.plot(leafs, bagout, marker='v', label='Bag Out-Of-Sample RMSE')
+    plt.plot(leafs, insamrmse, label='DT In-Sample RMSE')
+    plt.plot(leafs, outsamrmse, linestyle=':', label='DT Out-Of-Sample RMSE')
+    plt.plot(leafs, bagin, label='Bag In-Sample RMSE')
+    plt.plot(leafs, bagout, linestyle=':', label='Bag Out-Of-Sample RMSE')
 
     plt.title('Bagging of Determinist Decision Tree Learner RMSE vs Leaf Size')
     plt.xlabel('Leaf Size')
@@ -148,13 +136,15 @@ if __name__ == "__main__":
     plt.xticks(np.arange(50, -1, -10))
     plt.grid()
     plt.legend()
-    # plt.savefig('./experiment-2.png')
+    plt.savefig('./experiment-2.png')
     # plt.show()
     plt.clf()
 
     #EXPERIEMNT 3
-    dtmae = []
-    rtmae = []
+    in_dtmae = []
+    in_rtmae = []
+    out_dtmae = []
+    out_rtmae = []
     dtTime = []
     rtTime = []
     for l in leafs:
@@ -165,28 +155,53 @@ if __name__ == "__main__":
         elapsed_time = end_time - start_time
         dtTime.append(elapsed_time)
 
+        pred_y = dlearner.query(test_x)
+        mae = sum(abs(pred_y - test_y)) / test_y.shape[0]
+        out_dtmae.append(mae)
+        pred_y = dlearner.query(train_x)
+        mae = sum(abs(pred_y - train_y)) / train_y.shape[0]
+        in_dtmae.append(mae)
+
         start_time = time.time()
-        rlearner = dt.DTLearner(leaf_size=l, verbose=False)
+        rlearner = rt.RTLearner(leaf_size=l, verbose=False)
         rlearner.add_evidence(train_x, train_y)
         end_time = time.time()
         elapsed_time = end_time - start_time
         rtTime.append(elapsed_time)
 
+        pred_y = rlearner.query(test_x)
+        mae = sum(abs(pred_y - test_y)) / test_y.shape[0]
+        out_rtmae.append(mae)
+        pred_y = rlearner.query(train_x)
+        mae = sum(abs(pred_y - train_y)) / train_y.shape[0]
+        in_rtmae.append(mae)
 
-    # evaluate in sample
-    # pred_y = dlearner.query(train_x)  # get the predictions
-    # rmse = math.sqrt(((train_y - pred_y) ** 2).sum() / train_y.shape[0])
-    # print()
-    # print("In sample results")
-    # print(f"RMSE: {rmse}")
-    # c = np.corrcoef(pred_y, y=train_y)
-    # print(f"corr: {c[0,1]}")
-    #
-    # # evaluate out of sample
-    # pred_y = dlearner.query(test_x)  # get the predictions
-    # rmse = math.sqrt(((test_y - pred_y) ** 2).sum() / test_y.shape[0])
-    # print()
-    # print("Out of sample results")
-    # print(f"RMSE: {rmse}")
-    # c = np.corrcoef(pred_y, y=test_y)
-    # print(f"corr: {c[0,1]}")
+    plt.plot(leafs, dtTime, label='DT Time to Train')
+    plt.plot(leafs, rtTime, label='RT Time to Train')
+
+    plt.title('Time to Train Determinist Decision Tree Learner vs Random Decision Tree Learner')
+    plt.xlabel('Leaf Size')
+    plt.ylabel('Time')
+    plt.xlim(50, 0)
+    plt.xticks(np.arange(50, -1, -10))
+    plt.grid()
+    plt.legend()
+    plt.savefig('./experiment-3-1.png')
+    # plt.show()
+    plt.clf()
+
+    plt.plot(leafs, in_dtmae, label='DT In-Sample MAE')
+    plt.plot(leafs, in_rtmae, label='RT In-Sample MAE')
+    plt.plot(leafs, out_dtmae, linestyle=":", label='DT Out-Of-Sample MAE')
+    plt.plot(leafs, out_rtmae, linestyle=':', label='RT Out-Of-Sample MAE')
+
+    plt.title('Determinist Decision Tree Learner vs Random Decision Tree Learner MAE')
+    plt.xlabel('Leaf Size')
+    plt.ylabel('MAE')
+    plt.xlim(50, 0)
+    plt.xticks(np.arange(50, -1, -10))
+    plt.grid()
+    plt.legend()
+    plt.savefig('./experiment-3-2.png')
+    # plt.show()
+    plt.clf()
